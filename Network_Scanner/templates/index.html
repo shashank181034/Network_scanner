@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Scanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+        <h1 class="text-2xl font-bold mb-4 text-center">Network Scanner</h1>
+        <button id="scanButton" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 mb-4">Start Scan</button>
+        <div id="results" class="bg-gray-200 p-4 rounded max-h-96 overflow-y-auto">
+            <p class="text-gray-600">Click "Start Scan" to check for devices on your network.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('scanButton').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p class="text-gray-600">Scanning...</p>';
+
+            try {
+                const response = await fetch('/scan', { method: 'POST' });
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultsDiv.innerHTML = '';
+                    if (data.new_devices.length > 0) {
+                        resultsDiv.innerHTML += '<p class="text-red-600 font-bold">[!] New devices detected!</p>';
+                        data.new_devices.forEach(device => {
+                            resultsDiv.innerHTML += `<p class="text-gray-800">→ ${device}</p>`;
+                        });
+                    } else {
+                        resultsDiv.innerHTML += '<p class="text-green-600">[+] No new devices found.</p>';
+                    }
+                    resultsDiv.innerHTML += `<p class="text-gray-600 mt-2">Local IP: ${data.local_ip}</p>`;
+                    resultsDiv.innerHTML += `<p class="text-gray-600">Subnet: ${data.subnet}</p>`;
+                } else {
+                    resultsDiv.innerHTML = `<p class="text-red-600">Error: ${data.error}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = '<p class="text-red-600">Failed to connect to server.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
